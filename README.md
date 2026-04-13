@@ -332,6 +332,10 @@ class ShipmentAdmin(admin.ModelAdmin):
 
 **Equipo 5 - Shipping Service**
 
+Colaboradores:
+- Miguel SP
+- Daniela (danielita05)
+
 Para dudas sobre la integración con este microservicio, consulta la documentación Swagger o contacta al equipo.
 
 ## Licencia

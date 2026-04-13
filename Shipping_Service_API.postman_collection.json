@@ -1,0 +1,124 @@
+{
+  "info": {
+    "name": "Shipping Service API - Equipo 5",
+    "description": "API de Envíos y Logística para sistema de E-Commerce distribuido",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Dispatch Shipment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"order_id\": 123,\n  \"payment_id\": 456\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/shipping/dispatch/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "shipping", "dispatch", ""]
+        },
+        "description": "Crea un envío para un pedido pagado.\n\nValidaciones:\n- El pedido debe existir en Order Service\n- El pedido debe estar en estado 'Pagado'\n- El usuario debe tener dirección de envío registrada\n\nRetorna:\n- tracking_number: Guía de rastreo única\n- carrier: Paquetería asignada (DHL o FedEx)\n- estimated_delivery_date: Fecha estimada de entrega"
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "Created",
+          "code": 201,
+          "body": "{\n  \"id\": 1,\n  \"order_id\": 123,\n  \"tracking_number\": \"SHIP-20260410-ABC123\",\n  \"carrier\": \"DHL\",\n  \"delivery_address\": \"Calle Principal 123, CDMX\",\n  \"status\": \"Pending\",\n  \"estimated_delivery_date\": \"2026-04-17\"\n}"
+        },
+        {
+          "name": "Order Not Paid",
+          "status": "Conflict",
+          "code": 409,
+          "body": "{\n  \"error\": \"El pedido no está pagado\",\n  \"detail\": \"Estado actual del pedido: Pendiente\"\n}"
+        },
+        {
+          "name": "Order Not Found",
+          "status": "Not Found",
+          "code": 404,
+          "body": "{\n  \"error\": \"El pedido 123 no existe\",\n  \"service\": \"Order Service\"\n}"
+        },
+        {
+          "name": "Service Unavailable",
+          "status": "Service Unavailable",
+          "code": 503,
+          "body": "{\n  \"error\": \"No se pudo conectar con el servicio de pedidos\",\n  \"service\": \"Order Service\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Track Shipment",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/shipping/track/:tracking_number/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "shipping", "track", ":tracking_number", ""],
+          "variable": [
+            {
+              "key": "tracking_number",
+              "value": "SHIP-20260410-ABC123",
+              "description": "Guía de rastreo del envío"
+            }
+          ]
+        },
+        "description": "Consulta el estado de un envío mediante su guía de rastreo.\n\nRetorna:\n- tracking_number: Guía de rastreo\n- status: Estado actual (Pending, In Transit, Delivered)\n- carrier: Paquetería\n- estimated_delivery_date: Fecha estimada de entrega\n- order_id: ID del pedido asociado"
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"tracking_number\": \"SHIP-20260410-ABC123\",\n  \"status\": \"In Transit\",\n  \"carrier\": \"DHL\",\n  \"estimated_delivery_date\": \"2026-04-17\",\n  \"order_id\": 123\n}"
+        },
+        {
+          "name": "Not Found",
+          "status": "Not Found",
+          "code": 404,
+          "body": "{\n  \"error\": \"Guía de rastreo no encontrada\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Swagger UI",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/schema/swagger-ui/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "schema", "swagger-ui", ""]
+        },
+        "description": "Documentación interactiva Swagger UI"
+      }
+    },
+    {
+      "name": "OpenAPI Schema",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/schema/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "schema", ""]
+        },
+        "description": "Esquema OpenAPI en formato JSON"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8002",
+      "type": "string"
+    }
+  ]
+}

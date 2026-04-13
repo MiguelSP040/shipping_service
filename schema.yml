@@ -1,0 +1,190 @@
+openapi: 3.0.3
+info:
+  title: Shipping Service API
+  version: 1.0.0
+  description: API de Envíos y Logística - Equipo 5
+paths:
+  /api/shipping/dispatch/:
+    post:
+      operationId: shipping_dispatch_create
+      description: Crea un envío para un pedido pagado y genera una guía de rastreo
+      tags:
+      - Shipping
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DispatchShipment'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentResponse'
+          description: Envío creado exitosamente
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Datos inválidos en la solicitud
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Pedido o usuario no encontrado
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: El pedido no está en estado 'Pagado'
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Servicio externo no disponible
+  /api/shipping/track/{tracking_number}/:
+    get:
+      operationId: shipping_track_retrieve
+      description: Consulta el estado de un envío por su guía de rastreo
+      parameters:
+      - in: path
+        name: tracking_number
+        schema:
+          type: string
+        description: Guía de rastreo del envío
+        required: true
+      tags:
+      - Shipping
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tracking'
+          description: Información del envío
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Envío no encontrado
+components:
+  schemas:
+    CarrierEnum:
+      enum:
+      - DHL
+      - FedEx
+      type: string
+      description: |-
+        * `DHL` - DHL
+        * `FedEx` - FedEx
+    DispatchShipment:
+      type: object
+      description: Serializer for dispatch shipment request
+      properties:
+        order_id:
+          type: integer
+          minimum: 1
+        payment_id:
+          type: integer
+          nullable: true
+      required:
+      - order_id
+    ErrorResponse:
+      type: object
+      description: Serializer for error responses
+      properties:
+        error:
+          type: string
+        detail:
+          type: string
+        status_code:
+          type: integer
+      required:
+      - error
+    ShipmentResponse:
+      type: object
+      description: Serializer for shipment response
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        order_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        tracking_number:
+          type: string
+          maxLength: 50
+        carrier:
+          $ref: '#/components/schemas/CarrierEnum'
+        delivery_address:
+          type: string
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        estimated_delivery_date:
+          type: string
+          format: date
+      required:
+      - carrier
+      - delivery_address
+      - estimated_delivery_date
+      - id
+      - order_id
+      - tracking_number
+    StatusEnum:
+      enum:
+      - Pending
+      - In Transit
+      - Delivered
+      type: string
+      description: |-
+        * `Pending` - Pendiente
+        * `In Transit` - En Tránsito
+        * `Delivered` - Entregado
+    Tracking:
+      type: object
+      description: Serializer for tracking shipment response
+      properties:
+        tracking_number:
+          type: string
+          maxLength: 50
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        carrier:
+          $ref: '#/components/schemas/CarrierEnum'
+        estimated_delivery_date:
+          type: string
+          format: date
+        order_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+      required:
+      - carrier
+      - estimated_delivery_date
+      - order_id
+      - tracking_number
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
